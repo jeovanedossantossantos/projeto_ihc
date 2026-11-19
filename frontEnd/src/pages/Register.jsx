@@ -9,8 +9,7 @@ function validate(form) {
   const errs = {};
   if (form.name.trim().length < 2) errs.name = "O nome deve ter pelo menos 2 caracteres.";
   if (!EMAIL_RE.test(form.email.trim())) errs.email = "Informe um e-mail válido.";
-  if (form.password.length < 8) errs.password = "A senha deve ter pelo menos 8 caracteres.";
-  else if (form.password.length > 72) errs.password = "A senha deve ter no máximo 72 caracteres.";
+  if (form.password.length < 6) errs.password = "A senha deve ter pelo menos 6 caracteres.";
   if (form.confirm !== form.password) errs.confirm = "As senhas não coincidem.";
   return errs;
 }
@@ -43,7 +42,7 @@ export default function Register() {
       navigate("/", { replace: true });
     } catch (err) {
       setErrors(fieldErrorsFrom(err));
-      setFormError(err.status === 409 ? "Não foi possível usar este e-mail. Tente outro." : err.message);
+      setFormError(err.message);
     } finally {
       setLoading(false);
     }
@@ -59,7 +58,7 @@ export default function Register() {
         {formError && <div className="alert" role="alert">{formError}</div>}
         <Field label="Nome" error={errors.name}>{input("name", { autoComplete: "name", placeholder: "Seu nome completo" })}</Field>
         <Field label="E-mail" error={errors.email}>{input("email", { type: "email", autoComplete: "email", placeholder: "seu@email.com" })}</Field>
-        <Field label="Senha" error={errors.password}>{input("password", { type: "password", autoComplete: "new-password", placeholder: "Mínimo de 8 caracteres" })}</Field>
+        <Field label="Senha" error={errors.password}>{input("password", { type: "password", autoComplete: "new-password", placeholder: "Mínimo de 6 caracteres" })}</Field>
         <Field label="Confirmar senha" error={errors.confirm}>{input("confirm", { type: "password", autoComplete: "new-password", placeholder: "Repita a senha" })}</Field>
 
         <button className="btn btn-primary btn-lg" disabled={loading}>{loading ? "Criando conta…" : "Cadastrar"}</button>

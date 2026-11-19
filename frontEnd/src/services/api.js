@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+// Base da API (o backend monta as rotas em /api).
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000/api").replace(/\/$/, "");
 const TOKEN_KEY = "mentoria:token";
 
 export const tokenStorage = {
@@ -11,7 +12,7 @@ export class ApiError extends Error {
   constructor(message, status, errors = []) {
     super(message);
     this.status = status;
-    this.errors = errors;
+    this.errors = errors; // [{ field, message }]
   }
 }
 
@@ -34,15 +35,31 @@ async function request(path, { method = "GET", body, auth = false } = {}) {
   }
 
   const data = await response.json().catch(() => ({}));
-  if (!response.ok || data.success === false) {
-    throw new ApiError(data.message || "Erro inesperado.", response.status, data.errors || []);
+  if (!response.ok) {
+    // Formato de erro do backend: { error, details?: [{ campo, mensagem }] }
+    const errors = Array.isArray(data.details)
+      ? data.details.map((d) => ({ field: d.campo, message: d.mensagem }))
+      : [];
+    throw new ApiError(data.error || "Erro inesperado.", response.status, errors);
   }
   return data;
 }
 
+/** Normaliza o usuário da API ({ _id, name, email, ... }) para o formato usado no app. */
+export function normalizeUser(u) {
+  return u ? { ...u, id: u._id || u.id } : u;
+}
+
 export const authApi = {
-  login: (email, password) => request("/login", { method: "POST", body: { email, password } }),
-  register: (name, email, password) =>
-    request("/register", { method: "POST", body: { name, email, password } }),
-  me: () => request("/me", { auth: true }),
+  // Respostas: { token, user }
+  login: async (email, password) => {
+    const { token, user } = await request("/auth/login", { method: "POST", body: { email, password } });
+    return { token, user: normalizeUser(user) };
+  },
+  register: async (name, email, password) => {
+    const { token, user } = await request("/auth/register", { method: "POST", body: { name, email, password } });
+    return { token, user: normalizeUser(user) };
+  },
+  // Resposta: o próprio usuário
+  me: async () => normalizeUser(await request("/auth/me", { auth: true })),
 };

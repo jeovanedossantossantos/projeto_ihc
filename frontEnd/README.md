@@ -8,7 +8,7 @@ o guia de estilos e as diretrizes de acessibilidade (WCAG 2.1 AA).
 ```bash
 cd frontEnd
 npm install
-cp .env.example .env   # ajuste VITE_API_URL se a API não estiver em http://localhost:4000
+cp .env.example .env   # ajuste VITE_API_URL se a API não estiver em http://localhost:3000/api
 npm run dev            # http://localhost:5173
 ```
 
@@ -49,7 +49,7 @@ status sempre com ícone + texto (não só cor), presença "Online agora / Offli
 
 ## Dados
 
-- **Autenticação** usa a API real: `POST /login`, `POST /register`, `GET /me` (token JWT no `localStorage`).
+- **Autenticação** usa a API real: `POST /api/auth/login`, `POST /api/auth/register`, `GET /api/auth/me` (token JWT no `localStorage`).
 - **Mentores, agendamentos, grupos, tarefas e mensagens** ainda não têm rotas no backend. Ficam em
   `src/context/DataContext.jsx` (dados iniciais em `src/data/mock.js`) e são salvos no `localStorage`.
   As respostas no chat são simuladas. Em **Perfil → Restaurar dados de demonstração** tudo volta ao estado inicial.

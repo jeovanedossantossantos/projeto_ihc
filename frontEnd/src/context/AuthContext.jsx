@@ -33,9 +33,9 @@ export function AuthProvider({ children }) {
     if (!tokenStorage.get()) return;
     authApi
       .me()
-      .then(({ data }) => {
-        localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-        setUser(data.user);
+      .then((me) => {
+        localStorage.setItem(USER_KEY, JSON.stringify(me));
+        setUser(me);
       })
       .catch((err) => {
         // Sem conexão: mantém a sessão local. Token inválido: encerra.
@@ -45,15 +45,15 @@ export function AuthProvider({ children }) {
   }, [logout]);
 
   const login = async (email, password) => {
-    const { data } = await authApi.login(email, password);
-    saveSession(data);
-    return data.user;
+    const session = await authApi.login(email, password);
+    saveSession(session);
+    return session.user;
   };
 
   const register = async (name, email, password) => {
-    const { data } = await authApi.register(name, email, password);
-    saveSession(data);
-    return data.user;
+    const session = await authApi.register(name, email, password);
+    saveSession(session);
+    return session.user;
   };
 
   return (
