@@ -1,47 +1,53 @@
-const mongoose = require("mongoose")
-const bcrypt = require("bcrypt")
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
-const userSchema = new mongoose.Schema(
-    {
-        name: {
-            type: String,
-            required: true,
-            trim: true,
-            minlength: 2,
-            maxlength: 100
-        },
-        email: {
-            type: String,
-            required: true,
-            unique: true,
-            lowercase: true,
-            trim: true,
-            maxlength: 254
-        },
-        password: {
-            type: String,
-            required: true,
-            select: false
-        }
-    },
-    {
-        timestamps: true,
-        versionKey: false
-    }
+const availabilitySchema = new mongoose.Schema(
+  {
+    weekday: { type: Number, min: 0, max: 6, required: true }, // 0 = domingo
+    start: { type: String, required: true }, // "HH:mm"
+    end: { type: String, required: true },
+  },
+  { _id: false }
 );
 
-// A senha é armazenada somente como hash.
-userSchema.pre("save", async function () {
-    if (!this.isModified("password")) return;
+const userSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    passwordHash: { type: String, required: true, select: false },
+    role: { type: String, enum: ['student', 'mentor'], default: 'student', index: true },
+    course: String,
+    university: String,
+    avatarUrl: String,
+    privacy: {
+      profileVisible: { type: Boolean, default: true },
+      showHistory: { type: Boolean, default: false },
+    },
+    // Só preenchido para role = 'mentor'
+    mentorProfile: {
+      bio: String,
+      subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Subject' }],
+      availability: [availabilitySchema],
+      slotMinutes: { type: Number, default: 60 },
+      ratingAvg: { type: Number, default: 0 },
+      ratingCount: { type: Number, default: 0 },
+    },
+  },
+  { timestamps: true }
+);
 
-    const salt = await bcrypt.genSalt(12);
-    this.password = await bcrypt.hash(this.password, salt);
+userSchema.index({ 'mentorProfile.subjects': 1, 'mentorProfile.ratingAvg': -1 });
+
+userSchema.methods.comparePassword = function (plain) {
+  return bcrypt.compare(plain, this.passwordHash);
+};
+userSchema.statics.hash = (plain) => bcrypt.hash(plain, 10);
+userSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.passwordHash;
+    delete ret.__v;
+    return ret;
+  },
 });
 
-userSchema.methods.comparePassword = function (candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.password);
-};
-
-const User = mongoose.model("User", userSchema);
-
-module.exports = User;
+export const User = mongoose.model('User', userSchema);

@@ -1,29 +1,32 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "mentoria-backend",
+  "version": "0.1.0",
+  "description": "MentorIA - backend protótipo (Node.js + MongoDB)",
+  "type": "module",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node --watch ./index.js"
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "seed": "node src/seed.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
-    "express": "^5.3.0",
-    "dotenv": "^16.4.5",
-    "jsonwebtoken": "^9.0.2",
-    "express-rate-limit": "^7.5.0",
-    "helmet": "^8.0.0",
-    "mongoose": "^8.9.5",
-    "zod": "^3.24.1"
+    "dotenv": "^18.0.10",
+    "express": "^4.22.3",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.24.10",
+    "morgan": "^1.12.1",
+    "multer": "^2.5.0",
+    "socket.io": "^4.8.4",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/mongoose": "^5.11.97",
-    "dotenv-cli": "^7.4.2"
+    "nodemon": "^3.1.14",
+    "supertest": "^7.3.2"
   }
 }
