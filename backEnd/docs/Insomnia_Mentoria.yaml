@@ -1,0 +1,2586 @@
+type: collection.insomnia.rest/5.0
+schema_version: '5.1'
+name: MentorIA API
+meta:
+  id: wrk_7973ca0b56fc45a9a1ccbc4986427e6e
+  created: 1794620000000
+  modified: 1794620099999
+  description: Coleção de testes do backend MentorIA. Rode `npm run seed` e execute as pastas em ordem (Collection Runner).
+collection:
+- name: 00 · Health
+  meta:
+    id: fld_83a7d63c329b47849b722cb47fd0455d
+    created: 1794620000003
+    modified: 1794620000004
+    sortKey: 1000
+    description: Verifica se a API está no ar.
+  children:
+  - url: '{{ _.baseUrl }}/health'
+    name: GET - Health check
+    meta:
+      id: req_c85baab539e641ecb58774c8a5231b44
+      created: 1794620000001
+      modified: 1794620000002
+      isPrivate: false
+      description: 'Rota pública. Esperado: `{ ok: true }`.'
+      sortKey: 100
+    method: GET
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('ok = true', () => insomnia.expect(body.ok).to.eql(true));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 01 · Auth
+  meta:
+    id: fld_f919f39fccbe42ad91a5a06fc6f2b2ed
+    created: 1794620000017
+    modified: 1794620000018
+    sortKey: 2000
+    description: 'Cadastro e login. Rode os 3 logins primeiro: eles guardam tokens e IDs no ambiente. Requer `npm run seed`.'
+  children:
+  - url: '{{ _.baseUrl }}/api/auth/register'
+    name: POST - Registrar aluno (novo)
+    meta:
+      id: req_4f0d4f6aadc24ac2823e2b842f2e551b
+      created: 1794620000005
+      modified: 1794620000006
+      isPrivate: false
+      description: Cria um aluno novo (e-mail único a cada execução). Guarda `newUserToken`, usado no teste de troca de senha.
+      sortKey: 200
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Aluno Teste",
+          "email": "aluno{% now 'millis', '' %}@teste.com",
+          "password": "123456",
+          "role": "student",
+          "course": "Engenharia",
+          "university": "UFRB"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 201 && body !== null) {
+          insomnia.environment.set('newUserToken', body.token);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/auth/register'
+    name: POST - Registrar mentor (novo)
+    meta:
+      id: req_7d03f8ddbe164dcd93f70c38af0d9a7c
+      created: 1794620000007
+      modified: 1794620000008
+      isPrivate: false
+      description: 'Cria um usuário com `role: mentor`.'
+      sortKey: 300
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Mentor Teste",
+          "email": "mentor{% now 'millis', '' %}@teste.com",
+          "password": "123456",
+          "role": "mentor",
+          "course": "Matemática",
+          "university": "UFRB"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/auth/login'
+    name: POST - Login aluno (João)
+    meta:
+      id: req_bbe28244ca5c42bea81278414703e51a
+      created: 1794620000009
+      modified: 1794620000010
+      isPrivate: false
+      description: Usuário do seed. Guarda `token` e `joaoId`.
+      sortKey: 400
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "email": "joao@mentoria.dev",
+          "password": "123456"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.environment.set('token', body.token);
+          insomnia.environment.set('joaoId', body.user._id);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/auth/login'
+    name: POST - Login mentor (Ana)
+    meta:
+      id: req_aa2b15eb0e5e47339d9eb5e23348bed0
+      created: 1794620000011
+      modified: 1794620000012
+      isPrivate: false
+      description: Mentora do seed (Cálculo e Álgebra Linear). Guarda `mentorToken` e `mentorId`.
+      sortKey: 500
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "email": "ana@mentoria.dev",
+          "password": "123456"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.environment.set('mentorToken', body.token);
+          insomnia.environment.set('mentorId', body.user._id);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/auth/login'
+    name: POST - Login aluna (Maria)
+    meta:
+      id: req_52d196aa389643d3ac157665ab503360
+      created: 1794620000013
+      modified: 1794620000014
+      isPrivate: false
+      description: Segunda aluna, para testar convites e chat. Guarda `mariaToken` e `mariaId`.
+      sortKey: 600
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "email": "maria@mentoria.dev",
+          "password": "123456"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.environment.set('mariaToken', body.token);
+          insomnia.environment.set('mariaId', body.user._id);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/auth/me'
+    name: GET - Meu usuário
+    meta:
+      id: req_0254bed30b8d4c4a8e7f3eb9d55ec5a9
+      created: 1794620000015
+      modified: 1794620000016
+      isPrivate: false
+      description: Retorna o usuário do token.
+      sortKey: 700
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('É o João', () => insomnia.expect(body.email).to.eql('joao@mentoria.dev'));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 02 · Matérias
+  meta:
+    id: fld_0cda2d533aa94c9c93e6c577fea7ef0d
+    created: 1794620000023
+    modified: 1794620000024
+    sortKey: 3000
+    description: Chips de filtro (Cálculo, Física...).
+  children:
+  - url: '{{ _.baseUrl }}/api/subjects'
+    name: GET - Listar matérias
+    meta:
+      id: req_685eb9e7e074469da639546f1231bb6c
+      created: 1794620000019
+      modified: 1794620000020
+      isPrivate: false
+      description: Guarda o `subjectId` de Cálculo (usado nos agendamentos).
+      sortKey: 800
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          const s = body.find((x) => x.slug === 'calculo');
+          insomnia.test('Cálculo existe (rode o seed)', () => insomnia.expect(!!s).to.eql(true));
+          if (s) insomnia.environment.set('subjectId', s._id);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/subjects'
+    name: POST - Criar matéria
+    meta:
+      id: req_e5c12aa62d1d4a5b8d7e629c9bb3a446
+      created: 1794620000021
+      modified: 1794620000022
+      isPrivate: false
+      description: Cria uma matéria nova (nome único).
+      sortKey: 900
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Matéria Teste {% now 'millis', '' %}"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 03 · Perfil
+  meta:
+    id: fld_561014286dc94606803201baf3257e03
+    created: 1794620000039
+    modified: 1794620000040
+    sortKey: 4000
+    description: 'Aba Perfil: dados pessoais, privacidade, histórico, progresso.'
+  children:
+  - url: '{{ _.baseUrl }}/api/users/me'
+    name: PATCH - Atualizar dados pessoais
+    meta:
+      id: req_e2dd689e75c54ecdb13beb632ced90ea
+      created: 1794620000025
+      modified: 1794620000026
+      isPrivate: false
+      description: ''
+      sortKey: 1000
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "João Silva",
+          "course": "Engenharia Elétrica",
+          "university": "UFRB",
+          "avatarUrl": "https://i.pravatar.cc/150?img=12"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/users/me/privacy'
+    name: PATCH - Atualizar privacidade
+    meta:
+      id: req_990b1eae82f141248fbd0a004f9a980b
+      created: 1794620000027
+      modified: 1794620000028
+      isPrivate: false
+      description: ''
+      sortKey: 1100
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "profileVisible": true,
+          "showHistory": true
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/users/me/password'
+    name: PATCH - Trocar senha (usuário novo)
+    meta:
+      id: req_1b43004645d2467f92a30249e2008b14
+      created: 1794620000029
+      modified: 1794620000030
+      isPrivate: false
+      description: Usa o usuário criado em *Registrar aluno (novo)*, para não alterar a senha do João.
+      sortKey: 1200
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "currentPassword": "123456",
+          "newPassword": "novaSenha123"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.newUserToken }}'
+    scripts:
+      afterResponse: insomnia.test('Status 204', () => { insomnia.expect(insomnia.response.code).to.eql(204); });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/users/me/history'
+    name: GET - Histórico
+    meta:
+      id: req_e9587cc1f3414e668a6844d99e0aea57
+      created: 1794620000031
+      modified: 1794620000032
+      isPrivate: false
+      description: ''
+      sortKey: 1300
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Tem mentorings e groups', () => { insomnia.expect(body).to.have.property('mentorings'); insomnia.expect(body).to.have.property('groups'); });
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/users/me/progress'
+    name: GET - Progresso
+    meta:
+      id: req_f2c35fd484f74f58900c9e5857130602
+      created: 1794620000033
+      modified: 1794620000034
+      isPrivate: false
+      description: ''
+      sortKey: 1400
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Tem contadores', () => insomnia.expect(body).to.have.property('tasksDone'));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/users/{{ _.mentorId }}'
+    name: GET - Perfil público de outro usuário
+    meta:
+      id: req_a2c4a666e12640119b1be7bcac8c738f
+      created: 1794620000035
+      modified: 1794620000036
+      isPrivate: false
+      description: Respeita a privacidade do alvo.
+      sortKey: 1500
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/users/me/mentor-profile'
+    name: 'PATCH - Mentor: editar perfil e disponibilidade'
+    meta:
+      id: req_300606bc54be43b8884b9dc010b5cb48
+      created: 1794620000037
+      modified: 1794620000038
+      isPrivate: false
+      description: 'Só para `role: mentor`. `weekday`: 0 = domingo ... 6 = sábado. Mantém a mesma agenda do seed.'
+      sortKey: 1600
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "bio": "Monitora de Cálculo I e II. Atendo com exercícios resolvidos.",
+          "slotMinutes": 60,
+          "availability": [
+            {
+              "weekday": 1,
+              "start": "14:00",
+              "end": "18:00"
+            },
+            {
+              "weekday": 1,
+              "start": "19:00",
+              "end": "21:00"
+            },
+            {
+              "weekday": 2,
+              "start": "14:00",
+              "end": "18:00"
+            },
+            {
+              "weekday": 2,
+              "start": "19:00",
+              "end": "21:00"
+            },
+            {
+              "weekday": 3,
+              "start": "14:00",
+              "end": "18:00"
+            },
+            {
+              "weekday": 3,
+              "start": "19:00",
+              "end": "21:00"
+            },
+            {
+              "weekday": 4,
+              "start": "14:00",
+              "end": "18:00"
+            },
+            {
+              "weekday": 4,
+              "start": "19:00",
+              "end": "21:00"
+            },
+            {
+              "weekday": 5,
+              "start": "14:00",
+              "end": "18:00"
+            },
+            {
+              "weekday": 5,
+              "start": "19:00",
+              "end": "21:00"
+            }
+          ]
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.mentorToken }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 04 · Mentores (Fluxo 1)
+  meta:
+    id: fld_96ec867c768c4b4e991d7ad8bc58bf0b
+    created: 1794620000053
+    modified: 1794620000054
+    sortKey: 5000
+    description: Buscar matéria / filtrar por chip → lista por nota → perfil → horários.
+  children:
+  - url: '{{ _.baseUrl }}/api/mentors'
+    name: GET - Listar mentores (por nota)
+    meta:
+      id: req_237497d0b07a49b19a824b768301aec8
+      created: 1794620000041
+      modified: 1794620000042
+      isPrivate: false
+      description: ''
+      sortKey: 1700
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Lista ordenada por nota', () => { const n = body.items.map((m) => m.mentorProfile.ratingAvg); insomnia.expect(n).to.eql([...n].sort((a, b) => b - a)); });
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/mentors?search=calc'
+    name: GET - Buscar matéria (barra de busca)
+    meta:
+      id: req_0e7a3bb8e4f240a6ab7a70cb337b9f5e
+      created: 1794620000043
+      modified: 1794620000044
+      isPrivate: false
+      description: Busca por nome de matéria (parcial, sem diferenciar maiúsculas).
+      sortKey: 1800
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Só mentores de Cálculo', () => insomnia.expect(body.total).to.be.above(0));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/mentors?subject=calculo'
+    name: GET - Filtrar por chip (slug)
+    meta:
+      id: req_1f195134efa840459a962e8c33af4f40
+      created: 1794620000045
+      modified: 1794620000046
+      isPrivate: false
+      description: ''
+      sortKey: 1900
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/mentors?subject={{ _.subjectId }}&page=1&limit=5'
+    name: GET - Filtrar por chip (id) + paginação
+    meta:
+      id: req_addd4217056b41d88b3b93480a571170
+      created: 1794620000047
+      modified: 1794620000048
+      isPrivate: false
+      description: ''
+      sortKey: 2000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/mentors/{{ _.mentorId }}'
+    name: GET - Perfil do mentor + avaliações
+    meta:
+      id: req_9747a500f64d4987a3071aaeeb21927d
+      created: 1794620000049
+      modified: 1794620000050
+      isPrivate: false
+      description: ''
+      sortKey: 2100
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Tem mentor e reviews', () => { insomnia.expect(body).to.have.property('mentor'); insomnia.expect(body.reviews).to.be.an('array'); });
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/mentors/{{ _.mentorId }}/availability?date={{ _.bookingDate }}'
+    name: GET - Horários livres do dia
+    meta:
+      id: req_0c65d4f982a04324943c7a509441312c
+      created: 1794620000051
+      modified: 1794620000052
+      isPrivate: false
+      description: O pre-request calcula `bookingDate` (próximo dia útil). Guarda o primeiro horário livre em `slotStart`.
+      sortKey: 2200
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      preRequest: |-
+        const d = new Date(Date.now() + 2 * 86400000);
+        while ([0, 6].includes(d.getUTCDay())) d.setUTCDate(d.getUTCDate() + 1);
+        insomnia.environment.set('bookingDate', d.toISOString().slice(0, 10));
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Há horários livres', () => insomnia.expect(body.slots.length).to.be.above(0));
+          if (body.slots.length) insomnia.environment.set('slotStart', body.slots[0].startsAt);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 05 · Agendamentos (Fluxo 1)
+  meta:
+    id: fld_64969b0d9d7842aea2e41539d31256c7
+    created: 1794620000075
+    modified: 1794620000076
+    sortKey: 6000
+    description: Agendar, listar, concluir (mentor), avaliar (aluno) e cancelar.
+  children:
+  - url: '{{ _.baseUrl }}/api/bookings'
+    name: POST - Agendar mentoria
+    meta:
+      id: req_4d2773310c694d96bff5d24022b28c15
+      created: 1794620000055
+      modified: 1794620000056
+      isPrivate: false
+      description: Usa `slotStart` da rota de horários livres. Guarda `bookingId`.
+      sortKey: 2300
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "mentorId": "{{ _.mentorId }}",
+          "subjectId": "{{ _.subjectId }}",
+          "startsAt": "{{ _.slotStart }}",
+          "notes": "Dúvida em limites e derivadas"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 201 && body !== null) {
+          insomnia.environment.set('bookingId', body._id);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/bookings'
+    name: POST - Agendar o mesmo horário (conflito)
+    meta:
+      id: req_2f912710853642b2b96bd0e568bf591f
+      created: 1794620000057
+      modified: 1794620000058
+      isPrivate: false
+      description: 'Esperado **409 Horário indisponível**: o horário já foi reservado.'
+      sortKey: 2400
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "mentorId": "{{ _.mentorId }}",
+          "subjectId": "{{ _.subjectId }}",
+          "startsAt": "{{ _.slotStart }}"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 409', () => { insomnia.expect(insomnia.response.code).to.eql(409); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/bookings'
+    name: GET - Minhas mentorias (aluno)
+    meta:
+      id: req_b1306bdf60b44dbf923b40a1ed267718
+      created: 1794620000059
+      modified: 1794620000060
+      isPrivate: false
+      description: ''
+      sortKey: 2500
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/bookings?status=scheduled&upcoming=true'
+    name: GET - Próximas mentorias agendadas
+    meta:
+      id: req_174eead9deb844e79ca65f3dbb133193
+      created: 1794620000061
+      modified: 1794620000062
+      isPrivate: false
+      description: ''
+      sortKey: 2600
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/bookings'
+    name: GET - Minhas mentorias (mentor)
+    meta:
+      id: req_1557c0b29f8043978d0e7cfff20cd01d
+      created: 1794620000063
+      modified: 1794620000064
+      isPrivate: false
+      description: O mentor também enxerga as mentorias em que é o mentor.
+      sortKey: 2700
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.mentorToken }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/bookings/{{ _.bookingId }}/complete'
+    name: PATCH - Mentor conclui a mentoria
+    meta:
+      id: req_02e1c408cd134f6eb58f86ec73c70dd3
+      created: 1794620000065
+      modified: 1794620000066
+      isPrivate: false
+      description: Só o mentor conclui. Gera notificação de avaliação para o aluno.
+      sortKey: 2800
+    method: PATCH
+    authentication:
+      type: bearer
+      token: '{{ _.mentorToken }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Status completed', () => insomnia.expect(body.status).to.eql('completed'));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/mentors/{{ _.mentorId }}/reviews'
+    name: POST - Aluno avalia o mentor
+    meta:
+      id: req_c2c51ed22b454840a189710c2201be9e
+      created: 1794620000067
+      modified: 1794620000068
+      isPrivate: false
+      description: Só após mentoria concluída; uma avaliação por mentoria (repetir dá 409).
+      sortKey: 2900
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "bookingId": "{{ _.bookingId }}",
+          "rating": 5,
+          "comment": "Explicou muito bem, recomendo!"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/mentors/{{ _.mentorId }}/availability?date={{ _.bookingDate }}'
+    name: GET - Horários livres (2ª reserva)
+    meta:
+      id: req_aefdcf3ed61040efaffbe81e1e25bfc0
+      created: 1794620000069
+      modified: 1794620000070
+      isPrivate: false
+      description: ''
+      sortKey: 3000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      preRequest: |-
+        const d = new Date(Date.now() + 2 * 86400000);
+        while ([0, 6].includes(d.getUTCDay())) d.setUTCDate(d.getUTCDate() + 1);
+        insomnia.environment.set('bookingDate', d.toISOString().slice(0, 10));
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Há horários livres', () => insomnia.expect(body.slots.length).to.be.above(0));
+          if (body.slots.length) insomnia.environment.set('slotStart', body.slots[0].startsAt);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/bookings'
+    name: POST - Agendar (2ª reserva)
+    meta:
+      id: req_ddea6369b0df40e5a4e77643ea853541
+      created: 1794620000071
+      modified: 1794620000072
+      isPrivate: false
+      description: ''
+      sortKey: 3100
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "mentorId": "{{ _.mentorId }}",
+          "subjectId": "{{ _.subjectId }}",
+          "startsAt": "{{ _.slotStart }}"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 201 && body !== null) {
+          insomnia.environment.set('bookingId2', body._id);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/bookings/{{ _.bookingId2 }}/cancel'
+    name: PATCH - Cancelar mentoria
+    meta:
+      id: req_306a72671aec4c63a855710435319d9c
+      created: 1794620000073
+      modified: 1794620000074
+      isPrivate: false
+      description: Aluno ou mentor podem cancelar. Notifica a outra parte.
+      sortKey: 3200
+    method: PATCH
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Status cancelled', () => insomnia.expect(body.status).to.eql('cancelled'));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 06 · Grupos (Fluxo 2)
+  meta:
+    id: fld_148a6c50fef746b7b3c3209f61b03429
+    created: 1794620000091
+    modified: 1794620000092
+    sortKey: 7000
+    description: Criar grupo, convidar, aceitar convite.
+  children:
+  - url: '{{ _.baseUrl }}/api/groups'
+    name: POST - Criar grupo + convites
+    meta:
+      id: req_faeda13374d64d228e6dcb43b52d93a6
+      created: 1794620000077
+      modified: 1794620000078
+      isPrivate: false
+      description: Cria grupo, chat do grupo e convites. Guarda `groupId`.
+      sortKey: 3300
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Projeto de Física II",
+          "subject": "Física",
+          "deadline": "{{ _.deadline }}",
+          "memberEmails": [
+            "maria@mentoria.dev"
+          ]
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      preRequest: insomnia.environment.set('deadline', new Date(Date.now() + 14 * 86400000).toISOString());
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 201 && body !== null) {
+          insomnia.test('1 convite enviado', () => insomnia.expect(body.invitesSent).to.eql(1));
+          insomnia.environment.set('groupId', body.group._id);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups'
+    name: GET - Meus grupos (com progresso)
+    meta:
+      id: req_43a90d6a813048a286b09302c6a62d1f
+      created: 1794620000079
+      modified: 1794620000080
+      isPrivate: false
+      description: ''
+      sortKey: 3400
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Grupo na lista', () => insomnia.expect(body.some((g) => g._id === insomnia.environment.get('groupId'))).to.eql(true));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}'
+    name: GET - Detalhe do grupo
+    meta:
+      id: req_4c93d7ee87494065837002f56ef84a90
+      created: 1794620000081
+      modified: 1794620000082
+      isPrivate: false
+      description: Guarda `conversationId` (chat do grupo).
+      sortKey: 3500
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Tem progress', () => insomnia.expect(body).to.have.property('progress'));
+          insomnia.environment.set('conversationId', body.conversation);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups/invites/me'
+    name: 'GET - Maria: convites pendentes'
+    meta:
+      id: req_3338b9188a16406795d22f7306842890
+      created: 1794620000083
+      modified: 1794620000084
+      isPrivate: false
+      description: ''
+      sortKey: 3600
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.mariaToken }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Convite do grupo', () => insomnia.expect(body.some((i) => i.groupId === insomnia.environment.get('groupId'))).to.eql(true));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}/invites/respond'
+    name: 'POST - Maria: aceitar convite'
+    meta:
+      id: req_e399132f92904191a608ea219190e18c
+      created: 1794620000085
+      modified: 1794620000086
+      isPrivate: false
+      description: 'Use `accept: false` para recusar.'
+      sortKey: 3700
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "accept": true
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.mariaToken }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}/invites'
+    name: POST - Convidar mais pessoas
+    meta:
+      id: req_04f48fd30be541579388470f36819cd2
+      created: 1794620000087
+      modified: 1794620000088
+      isPrivate: false
+      description: Só o criador. Máx. 10 e-mails por chamada.
+      sortKey: 3800
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "emails": [
+            "pedro@mentoria.dev"
+          ]
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}'
+    name: PATCH - Editar grupo
+    meta:
+      id: req_56913856d67446be80e210b4943883ce
+      created: 1794620000089
+      modified: 1794620000090
+      isPrivate: false
+      description: ''
+      sortKey: 3900
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Projeto de Física II (Final)",
+          "subject": "Física",
+          "deadline": "{{ _.deadline }}"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 07 · Kanban / Tarefas (Fluxo 2)
+  meta:
+    id: fld_2fe0273227c642eb98df738e565731ed
+    created: 1794620000109
+    modified: 1794620000110
+    sortKey: 8000
+    description: 'Colunas: todo (A fazer), doing (Fazendo), done (Feito).'
+  children:
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}/tasks'
+    name: POST - Criar tarefa (responsável + prazo)
+    meta:
+      id: req_c175c45de0e94a0282d1376b9c4896c2
+      created: 1794620000093
+      modified: 1794620000094
+      isPrivate: false
+      description: Responsável precisa ser membro. Notifica o responsável. Guarda `taskId`.
+      sortKey: 4000
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "title": "Pesquisar referências",
+          "description": "Levantar 5 artigos sobre o tema",
+          "assignee": "{{ _.mariaId }}",
+          "dueDate": "{{ _.deadline }}",
+          "status": "todo"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 201 && body !== null) {
+          insomnia.environment.set('taskId', body._id);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}/tasks'
+    name: POST - Criar 2ª tarefa (já em andamento)
+    meta:
+      id: req_dfb39ffdc9d040eb893ce8fecbbd4a38
+      created: 1794620000095
+      modified: 1794620000096
+      isPrivate: false
+      description: ''
+      sortKey: 4100
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "title": "Montar experimento",
+          "assignee": "{{ _.joaoId }}",
+          "status": "doing"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 201 && body !== null) {
+          insomnia.environment.set('taskId2', body._id);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}/tasks'
+    name: GET - Ver quadro Kanban
+    meta:
+      id: req_ed77e48ac1724b9798cc5c1dbe7525c7
+      created: 1794620000097
+      modified: 1794620000098
+      isPrivate: false
+      description: ''
+      sortKey: 4200
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Colunas do quadro', () => { ['todo','doing','done'].forEach((c) => insomnia.expect(body.board).to.have.property(c)); });
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}/tasks/{{ _.taskId }}'
+    name: PATCH - Mover para Fazendo
+    meta:
+      id: req_558e36383d704d1493502e900900e933
+      created: 1794620000099
+      modified: 1794620000100
+      isPrivate: false
+      description: ''
+      sortKey: 4300
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "status": "doing"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('doing', () => insomnia.expect(body.status).to.eql('doing'));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}/tasks/{{ _.taskId }}'
+    name: PATCH - Mover para Feito
+    meta:
+      id: req_24cccb24b81e4243bee12a5f98eb4ae6
+      created: 1794620000101
+      modified: 1794620000102
+      isPrivate: false
+      description: Notifica os outros membros e atualiza o % de progresso.
+      sortKey: 4400
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "status": "done"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('done + completedAt', () => { insomnia.expect(body.status).to.eql('done'); insomnia.expect(body.completedAt).to.be.ok; });
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}/tasks/{{ _.taskId }}'
+    name: PATCH - Reatribuir / editar tarefa
+    meta:
+      id: req_18245300790541448491c1a5b9a7008a
+      created: 1794620000103
+      modified: 1794620000104
+      isPrivate: false
+      description: ''
+      sortKey: 4500
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "title": "Pesquisar referências (revisado)",
+          "assignee": "{{ _.joaoId }}",
+          "dueDate": "{{ _.deadline }}"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}'
+    name: GET - Progresso do grupo (após mudanças)
+    meta:
+      id: req_ce8e9c186d924896ab52ec5fd55d8a86
+      created: 1794620000105
+      modified: 1794620000106
+      isPrivate: false
+      description: ''
+      sortKey: 4600
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Progresso calculado', () => insomnia.expect(body.progress.total).to.be.above(0));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}/tasks/{{ _.taskId2 }}'
+    name: DELETE - Excluir tarefa
+    meta:
+      id: req_328e2c5225524f85bb86683b26c202eb
+      created: 1794620000107
+      modified: 1794620000108
+      isPrivate: false
+      description: ''
+      sortKey: 4700
+    method: DELETE
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: insomnia.test('Status 204', () => { insomnia.expect(insomnia.response.code).to.eql(204); });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 08 · Chat
+  meta:
+    id: fld_167c8f7b66e04cf0a7dfcd838128ef9b
+    created: 1794620000129
+    modified: 1794620000130
+    sortKey: 9000
+    description: Conversas 1:1 e de grupo, anexos. Tempo real via Socket.IO (`message:new`).
+  children:
+  - url: '{{ _.baseUrl }}/api/chat/conversations'
+    name: GET - Listar conversas
+    meta:
+      id: req_bcfa92bc2e744e019b73d8dea19312ee
+      created: 1794620000111
+      modified: 1794620000112
+      isPrivate: false
+      description: ''
+      sortKey: 4800
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('É lista', () => insomnia.expect(body).to.be.an('array'));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/chat/conversations'
+    name: POST - Criar/abrir conversa 1:1 (com mentor)
+    meta:
+      id: req_941ddfbdf46d4482a34cbc059237c33a
+      created: 1794620000113
+      modified: 1794620000114
+      isPrivate: false
+      description: 'Idempotente: devolve a mesma conversa se já existir. Guarda `directConversationId`.'
+      sortKey: 4900
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "userId": "{{ _.mentorId }}"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 201 && body !== null) {
+          insomnia.environment.set('directConversationId', body.id);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/chat/conversations/{{ _.conversationId }}/messages'
+    name: POST - Enviar mensagem no chat do grupo
+    meta:
+      id: req_78a29056df054e809cc96041cac00acc
+      created: 1794620000115
+      modified: 1794620000116
+      isPrivate: false
+      description: ''
+      sortKey: 5000
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "text": "Pessoal, já subi as referências!"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/chat/conversations/{{ _.conversationId }}/messages'
+    name: POST - Enviar mensagem com anexo
+    meta:
+      id: req_b1bdabfa913a4229bb4e875bf9fbd73c
+      created: 1794620000117
+      modified: 1794620000118
+      isPrivate: false
+      description: '`url` deve começar com `/uploads/` (use o retorno de *Upload de arquivo*).'
+      sortKey: 5100
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "text": "Segue o rascunho do relatório",
+          "attachments": [
+            {
+              "name": "relatorio.pdf",
+              "url": "/uploads/exemplo.pdf",
+              "mime": "application/pdf",
+              "size": 20480
+            }
+          ]
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/chat/conversations/{{ _.directConversationId }}/messages'
+    name: POST - Enviar mensagem 1:1
+    meta:
+      id: req_02054fedaa014320b76a28dc18eefba7
+      created: 1794620000119
+      modified: 1794620000120
+      isPrivate: false
+      description: ''
+      sortKey: 5200
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "text": "Oi Ana, podemos revisar limites amanhã?"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/chat/conversations/{{ _.directConversationId }}/messages'
+    name: GET - Mentor lê a conversa 1:1
+    meta:
+      id: req_aa49140bc8304ff88d71ea52c554ac43
+      created: 1794620000121
+      modified: 1794620000122
+      isPrivate: false
+      description: ''
+      sortKey: 5300
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.mentorToken }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Tem mensagens', () => insomnia.expect(body.length).to.be.above(0));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/chat/conversations/{{ _.conversationId }}/messages?limit=10'
+    name: GET - Histórico do grupo (mais recentes)
+    meta:
+      id: req_3d69f848085343c1bc79aba76ab62c9e
+      created: 1794620000123
+      modified: 1794620000124
+      isPrivate: false
+      description: ''
+      sortKey: 5400
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Máx. 10', () => insomnia.expect(body.length).to.be.at.most(10));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/chat/conversations/{{ _.conversationId }}/messages?limit=30&before={% now ''iso-8601'', '''' %}'
+    name: GET - Histórico paginado (before)
+    meta:
+      id: req_0ad1a9d9db914342a96ea69474127489
+      created: 1794620000125
+      modified: 1794620000126
+      isPrivate: false
+      description: 'Paginação por cursor: `before` = data da mensagem mais antiga já carregada.'
+      sortKey: 5500
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/uploads'
+    name: POST - Upload de arquivo
+    meta:
+      id: req_e08527c4fcb74497b9eb55e5d0c0915c
+      created: 1794620000127
+      modified: 1794620000128
+      isPrivate: false
+      description: '**Selecione um arquivo** no campo `file` (máx. 10 MB) antes de enviar. Sem arquivo retorna 400.'
+      sortKey: 5600
+    method: POST
+    body:
+      mimeType: multipart/form-data
+      params:
+      - name: file
+        disabled: false
+        type: file
+        fileName: ''
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 201', () => { insomnia.expect(insomnia.response.code).to.eql(201); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 201 && body !== null) {
+          insomnia.test('Retorna url', () => insomnia.expect(body.url).to.match(/^\/uploads\//));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 09 · Notificações
+  meta:
+    id: fld_ca77306399ae444a8d53b9a4c8cc8cd7
+    created: 1794620000139
+    modified: 1794620000140
+    sortKey: 10000
+    description: Usa o token da Maria, que recebeu convite, tarefas e conclusões.
+  children:
+  - url: '{{ _.baseUrl }}/api/notifications'
+    name: GET - Listar notificações
+    meta:
+      id: req_8d14f91c71034cd1b4c18ef34164c798
+      created: 1794620000131
+      modified: 1794620000132
+      isPrivate: false
+      description: Guarda `notificationId` da mais recente.
+      sortKey: 5700
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.mariaToken }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Tem unreadCount', () => insomnia.expect(body).to.have.property('unreadCount'));
+          if (body.items.length) insomnia.environment.set('notificationId', body.items[0]._id);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/notifications?unread=true&limit=10'
+    name: GET - Somente não lidas
+    meta:
+      id: req_f9055dd668e5462bb1098d965fdc46e1
+      created: 1794620000133
+      modified: 1794620000134
+      isPrivate: false
+      description: ''
+      sortKey: 5800
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.mariaToken }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/notifications/{{ _.notificationId }}/read'
+    name: PATCH - Marcar uma como lida
+    meta:
+      id: req_adc8c19efb374010b64700dc5e20368d
+      created: 1794620000135
+      modified: 1794620000136
+      isPrivate: false
+      description: ''
+      sortKey: 5900
+    method: PATCH
+    authentication:
+      type: bearer
+      token: '{{ _.mariaToken }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('readAt preenchido', () => insomnia.expect(body.readAt).to.be.ok);
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/notifications/read-all'
+    name: PATCH - Marcar todas como lidas
+    meta:
+      id: req_ff296a67081b48b5b2bbdd07ca234f43
+      created: 1794620000137
+      modified: 1794620000138
+      isPrivate: false
+      description: ''
+      sortKey: 6000
+    method: PATCH
+    authentication:
+      type: bearer
+      token: '{{ _.mariaToken }}'
+    scripts:
+      afterResponse: insomnia.test('Status 204', () => { insomnia.expect(insomnia.response.code).to.eql(204); });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 10 · Início (Dashboard)
+  meta:
+    id: fld_a782117ef0614c14b3ff89d6c857f9b4
+    created: 1794620000145
+    modified: 1794620000146
+    sortKey: 11000
+    description: Aba Início.
+  children:
+  - url: '{{ _.baseUrl }}/api/home'
+    name: GET - Dashboard do aluno
+    meta:
+      id: req_3d2aef62f4754b27b05e15abc833fe46
+      created: 1794620000141
+      modified: 1794620000142
+      isPrivate: false
+      description: ''
+      sortKey: 6100
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('Campos do dashboard', () => { ['nextBooking','activeGroups','notifications','pendingInvites'].forEach((k) => insomnia.expect(body).to.have.property(k)); });
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/home'
+    name: GET - Dashboard do mentor
+    meta:
+      id: req_0f81a9bb9fd44bd2b3af4d0061a0d1e4
+      created: 1794620000143
+      modified: 1794620000144
+      isPrivate: false
+      description: ''
+      sortKey: 6200
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.mentorToken }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 11 · Grupos · Entrega e saída
+  meta:
+    id: fld_b929304f448e40debffd84197699790e
+    created: 1794620000153
+    modified: 1794620000154
+    sortKey: 12000
+    description: 'Fecha o Fluxo 2: ENTREGA → FIM (Trabalho ✓).'
+  children:
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}/deliver'
+    name: POST - Marcar trabalho como entregue
+    meta:
+      id: req_1ad5f801c87144a5a7871b655d9c51ac
+      created: 1794620000147
+      modified: 1794620000148
+      isPrivate: false
+      description: Só o criador. Notifica os membros.
+      sortKey: 6300
+    method: POST
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 200 && body !== null) {
+          insomnia.test('delivered', () => insomnia.expect(body.status).to.eql('delivered'));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups?status=delivered'
+    name: GET - Grupos entregues
+    meta:
+      id: req_288a133dcbb04db6b6f42eccea8fa592
+      created: 1794620000149
+      modified: 1794620000150
+      isPrivate: false
+      description: ''
+      sortKey: 6400
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 200', () => { insomnia.expect(insomnia.response.code).to.eql(200); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}/members/{{ _.mariaId }}'
+    name: DELETE - Maria sai do grupo
+    meta:
+      id: req_f89619f88b864c80b0c87bf878333bac
+      created: 1794620000151
+      modified: 1794620000152
+      isPrivate: false
+      description: Dono remove outros membros; qualquer membro pode sair. O criador não pode sair.
+      sortKey: 6500
+    method: DELETE
+    authentication:
+      type: bearer
+      token: '{{ _.mariaToken }}'
+    scripts:
+      afterResponse: insomnia.test('Status 204', () => { insomnia.expect(insomnia.response.code).to.eql(204); });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 99 · Erros esperados
+  meta:
+    id: fld_087258e66b06480f8f27b69cca9e3576
+    created: 1794620000175
+    modified: 1794620000176
+    sortKey: 13000
+    description: 'Casos negativos: cada um deve retornar o status indicado no nome.'
+  children:
+  - url: '{{ _.baseUrl }}/api/groups'
+    name: GET - 401 sem token
+    meta:
+      id: req_f349a2bd946b4141b5389bf9ebdb5b6e
+      created: 1794620000155
+      modified: 1794620000156
+      isPrivate: false
+      description: ''
+      sortKey: 6600
+    method: GET
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 401', () => { insomnia.expect(insomnia.response.code).to.eql(401); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/auth/login'
+    name: POST - 401 senha errada
+    meta:
+      id: req_f6e1cf232c2240a8805c906b81e2413f
+      created: 1794620000157
+      modified: 1794620000158
+      isPrivate: false
+      description: ''
+      sortKey: 6700
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "email": "joao@mentoria.dev",
+          "password": "errada"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 401', () => { insomnia.expect(insomnia.response.code).to.eql(401); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/auth/register'
+    name: POST - 400 cadastro inválido
+    meta:
+      id: req_e11bac04358d474f98280af82884633c
+      created: 1794620000159
+      modified: 1794620000160
+      isPrivate: false
+      description: ''
+      sortKey: 6800
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "A",
+          "email": "x",
+          "password": "1"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 400', () => { insomnia.expect(insomnia.response.code).to.eql(400); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+        if (insomnia.response.code === 400 && body !== null) {
+          insomnia.test('Lista os campos', () => insomnia.expect(body.details.length).to.be.above(0));
+        }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/auth/register'
+    name: POST - 409 e-mail já cadastrado
+    meta:
+      id: req_629ffbc7ed66471ea6a45081fd4e76b0
+      created: 1794620000161
+      modified: 1794620000162
+      isPrivate: false
+      description: ''
+      sortKey: 6900
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "João",
+          "email": "joao@mentoria.dev",
+          "password": "123456"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 409', () => { insomnia.expect(insomnia.response.code).to.eql(409); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/mentors/abc'
+    name: GET - 400 ID inválido
+    meta:
+      id: req_ab201c49fb124a5aa83e2e14614df575
+      created: 1794620000163
+      modified: 1794620000164
+      isPrivate: false
+      description: ''
+      sortKey: 7000
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 400', () => { insomnia.expect(insomnia.response.code).to.eql(400); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/mentors/64b0c0ffee0000000000dead'
+    name: GET - 404 mentor inexistente
+    meta:
+      id: req_5b29b5e9352545eaa191e3a0e398e182
+      created: 1794620000165
+      modified: 1794620000166
+      isPrivate: false
+      description: ''
+      sortKey: 7100
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 404', () => { insomnia.expect(insomnia.response.code).to.eql(404); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/bookings'
+    name: POST - 409 horário no passado
+    meta:
+      id: req_157efbe292e043baa64682103d39c963
+      created: 1794620000167
+      modified: 1794620000168
+      isPrivate: false
+      description: ''
+      sortKey: 7200
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "mentorId": "{{ _.mentorId }}",
+          "subjectId": "{{ _.subjectId }}",
+          "startsAt": "2020-01-06T17:00:00.000Z"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 409', () => { insomnia.expect(insomnia.response.code).to.eql(409); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/bookings/{{ _.bookingId }}/cancel'
+    name: PATCH - 400 cancelar mentoria já concluída
+    meta:
+      id: req_55270cb3254342ce85cb82b0eccda7d8
+      created: 1794620000169
+      modified: 1794620000170
+      isPrivate: false
+      description: ''
+      sortKey: 7300
+    method: PATCH
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 400', () => { insomnia.expect(insomnia.response.code).to.eql(400); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/bookings/{{ _.bookingId }}/complete'
+    name: PATCH - 403 aluno tentando concluir mentoria
+    meta:
+      id: req_271a6a8864824ada95bd7721b899067e
+      created: 1794620000171
+      modified: 1794620000172
+      isPrivate: false
+      description: ''
+      sortKey: 7400
+    method: PATCH
+    authentication:
+      type: bearer
+      token: '{{ _.token }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 403', () => { insomnia.expect(insomnia.response.code).to.eql(403); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.baseUrl }}/api/groups/{{ _.groupId }}/tasks'
+    name: GET - 403 fora do grupo acessando tarefas
+    meta:
+      id: req_c24cafc4d87046efbece9df111fa4ee1
+      created: 1794620000173
+      modified: 1794620000174
+      isPrivate: false
+      description: ''
+      sortKey: 7500
+    method: GET
+    authentication:
+      type: bearer
+      token: '{{ _.mentorToken }}'
+    scripts:
+      afterResponse: |-
+        insomnia.test('Status 403', () => { insomnia.expect(insomnia.response.code).to.eql(403); });
+        let body = null;
+        try { body = insomnia.response.json(); } catch (e) { /* sem corpo */ }
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_d3c35fa1e343e0bf570589ac77baa8eb3c311f6f
+    created: 1794620000000
+    modified: 1794620000000
+environments:
+  name: Base Environment
+  meta:
+    id: env_d3c35fa1e343e0bf570589ac77baa8eb3c311f6f
+    created: 1794620000000
+    modified: 1794620000000
+    isPrivate: false
+  data:
+    baseUrl: http://localhost:4000
+    token: ''
+    mentorToken: ''
+    mariaToken: ''
+    newUserToken: ''
+    joaoId: ''
+    mentorId: ''
+    mariaId: ''
+    subjectId: ''
+    bookingDate: ''
+    slotStart: ''
+    bookingId: ''
+    bookingId2: ''
+    deadline: ''
+    groupId: ''
+    conversationId: ''
+    directConversationId: ''
+    taskId: ''
+    taskId2: ''
+    notificationId: ''
